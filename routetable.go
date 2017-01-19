@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"regexp"
 
-	"github.com/one-go/logs"
-	"github.com/one-go/web/http"
+	"github.com/hereyou-go/logs"
+	"github.com/hereyou-go/web/http"
 )
 
 type RouteData struct {

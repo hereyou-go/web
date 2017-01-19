@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/one-go/logs"
+	"github.com/hereyou-go/logs"
 )
 
 func resolveAddress(addr []string) string {

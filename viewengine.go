@@ -3,8 +3,8 @@ package web
 import (
 	"io"
 
-	"github.com/one-go/otpl"
-	"github.com/one-go/otpl/runtime"
+	"github.com/hereyou-go/otpl"
+	"github.com/hereyou-go/otpl/runtime"
 )
 
 // ViewEngine 提供用于将特定模板为渲染为相应输出格式的一组方法
