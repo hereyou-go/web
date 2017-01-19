@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+
+	"github.com/one-go/web/http"
 )
 
 type Handler interface{}
@@ -11,7 +13,7 @@ type HandlerFunc func(Context) interface{}
 type ServiceFunc func(Context) reflect.Value
 
 type Router struct {
-	method      HttpMethod
+	method      http.HttpMethod
 	pattern     string
 	middlewares []string
 	handler     Handler
@@ -89,6 +91,7 @@ func routerGetParams(handlerType reflect.Type, app *Application, instance interf
 	}
 	return params
 }
+
 func routerBuildHandle(method reflect.Value, params []ServiceFunc) HandlerFunc {
 	return func(ctx Context) interface{} {
 		arr := make([]reflect.Value, len(params))
@@ -102,6 +105,7 @@ func routerBuildHandle(method reflect.Value, params []ServiceFunc) HandlerFunc {
 		return nil
 	}
 }
+
 func buildHandler(app *Application, handler Handler, instance interface{}) (handle HandlerFunc) {
 	if method, ok := handler.(reflect.Method); ok {
 		handle = routerBuildHandle(method.Func, routerGetParams(method.Func.Type(), app, instance))
@@ -150,16 +154,3 @@ func compilePattern(pattern string) (string, []string) {
 	}
 	return pattern, keys
 }
-
-// func (router *Router) buildTo(table *RouteTable, app *Application) {
-// 	if !router.isGroup {
-// 		pattern := regexp.MustCompile(compilePattern(mergePattern(router)))
-// 		handler := buildHandler(app, router.handler)
-// 		table.Register(pattern, handler, 0, false)
-// 	} else {
-// 		for _, r := range router.items {
-// 			r.parent = router
-// 			r.buildTo(table, app)
-// 		}
-// 	}
-// }

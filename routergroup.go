@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/one-go/web/http"
 )
 
 type RouterGroup struct {
@@ -15,10 +17,20 @@ type RouterGroup struct {
 	groups      []*RouterGroup
 }
 
-func mergePattern(group *RouterGroup) string {
+func NewGroup(pattern string, middlewares ...string) *RouterGroup {
+	group := &RouterGroup{
+		pattern:     pattern,
+		middlewares: middlewares,
+		routers:     make([]*Router, 0),
+		groups:      make([]*RouterGroup, 0),
+	}
+	return group
+}
+
+func routerGroupMergePattern(group *RouterGroup) string {
 	suffix := strings.Trim(group.pattern, " ")
 	if group.parent != nil {
-		prefix := mergePattern(group.parent)
+		prefix := routerGroupMergePattern(group.parent)
 		if prefix == "/" {
 			prefix = "" //如果上级是默认规则，则去掉
 		}
@@ -32,7 +44,7 @@ func (group *RouterGroup) buildTo(table *RouteTable, app *Application) {
 		g.parent = group
 		g.buildTo(table, app)
 	}
-	groupPattern := mergePattern(group)
+	groupPattern := routerGroupMergePattern(group)
 	if groupPattern == "/" {
 		groupPattern = "" //去掉默认规则
 	}
@@ -43,7 +55,7 @@ func (group *RouterGroup) buildTo(table *RouteTable, app *Application) {
 	}
 }
 
-func (group *RouterGroup) Route(method HttpMethod, pattern string, handler Handler, middlewares []string) *Router {
+func (group *RouterGroup) Route(method http.HttpMethod, pattern string, handler Handler, middlewares []string) *Router {
 	router := &Router{
 		method:      method,
 		pattern:     pattern,
@@ -54,11 +66,7 @@ func (group *RouterGroup) Route(method HttpMethod, pattern string, handler Handl
 	return router
 }
 
-func (group *RouterGroup) Get(pattern string, handler Handler, middlewares ...string) *Router {
-	return group.Route(GET, pattern, handler, middlewares)
-}
-
-func resolveRoute(group *RouterGroup, controller interface{}) {
+func routerGroupResolveRoute(group *RouterGroup, controller interface{}) {
 	typ := reflect.TypeOf(controller)
 	styp := typ
 	if typ.Kind() == reflect.Ptr {
@@ -83,10 +91,10 @@ func resolveRoute(group *RouterGroup, controller interface{}) {
 			httpMethods := strings.Split(pattern[:index], "|")
 			pattern = pattern[index+1:]
 			fmt.Printf("%d %v = %v , %v   %v\n", i, f.Name, pattern, method.Name, httpMethods) //, f.Type(), f.Interface()
-			var httpMethod HttpMethod
+			var httpMethod http.HttpMethod
 			isset := false
 			for _, s := range httpMethods {
-				m := ParseHttpMethod(s)
+				m := http.ParseHttpMethod(s)
 				if isset {
 					httpMethod |= m
 				} else {
@@ -99,24 +107,20 @@ func resolveRoute(group *RouterGroup, controller interface{}) {
 	}
 }
 
+func (group *RouterGroup) AppendController(controller interface{}) *RouterGroup {
+	routerGroupResolveRoute(group, controller)
+	return group
+}
+
+//============== APIs ==============
+
+func (group *RouterGroup) Get(pattern string, handler Handler, middlewares ...string) *Router {
+	return group.Route(http.GET, pattern, handler, middlewares)
+}
+
 func (group *RouterGroup) Group(pattern string, controller interface{}, middlewares ...string) *RouterGroup {
 	sub := NewGroup(pattern).AppendController(controller)
 	sub.middlewares = middlewares
 	group.groups = append(group.groups, sub)
 	return sub
-}
-
-func (group *RouterGroup) AppendController(controller interface{}) *RouterGroup {
-	resolveRoute(group, controller)
-	return group
-}
-
-func NewGroup(pattern string, middlewares ...string) *RouterGroup {
-	group := &RouterGroup{
-		pattern:     pattern,
-		middlewares: middlewares,
-		routers:     make([]*Router, 0),
-		groups:      make([]*RouterGroup, 0),
-	}
-	return group
 }

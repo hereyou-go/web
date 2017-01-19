@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"github.com/one-go/logs"
+	"github.com/one-go/web/http"
 )
 
 type RouteData struct {
@@ -15,7 +16,7 @@ type RouteData struct {
 }
 
 type RouteEntry struct {
-	method      HttpMethod
+	method      http.HttpMethod
 	pattern     *regexp.Regexp
 	handler     HandlerFunc
 	middlewares []Middleware
@@ -26,7 +27,7 @@ type RouteTable struct {
 	routes *list.List
 }
 
-func (rt *RouteTable) Register(method HttpMethod, pattern *regexp.Regexp, paramNames []string, handler HandlerFunc, segments int, endsWildcard bool, middlewares ...Middleware) {
+func (rt *RouteTable) Register(method http.HttpMethod, pattern *regexp.Regexp, paramNames []string, handler HandlerFunc, segments int, endsWildcard bool, middlewares ...Middleware) {
 	route := &RouteEntry{
 		method:      method,
 		pattern:     pattern,
@@ -42,7 +43,7 @@ func (rt *RouteTable) Register(method HttpMethod, pattern *regexp.Regexp, paramN
 //http://stackoverflow.com/questions/30483652/how-to-get-capturing-group-functionality-in-golang-regular-expressions
 
 // Match 匹配
-func (rt *RouteTable) Match(method HttpMethod, url *url.URL) (*RouteData, bool) {
+func (rt *RouteTable) Match(method http.HttpMethod, url *url.URL) (*RouteData, bool) {
 	//url := ""
 	var route *RouteEntry
 	elem := rt.routes.Front()

@@ -1,3 +1,4 @@
+// Package web 主要用于处理浏览器/服务器之间通信。
 package web
 
 import (

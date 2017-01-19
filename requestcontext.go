@@ -63,3 +63,14 @@ func (ctx *RequestContext) PathValue(name string) (value string, ok bool) {
 func (ctx *RequestContext) Param(name string) string {
 	return "nil"
 }
+
+func (ctx *RequestContext) APIResult(status int, message string, data ...interface{}) View {
+	result := make(map[string]interface{}, 0)
+	result["status"] = status
+	result["message"] = message
+	result["data"] = data
+	if len(data) == 1 {
+		result["data"] = data[0]
+	}
+	return ctx.JSON(result)
+}

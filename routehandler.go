@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	webhttp "github.com/one-go/web/http"
 )
 
 type RouteHandler struct {
@@ -27,7 +29,7 @@ func (handler *RouteHandler) Handle(writer http.ResponseWriter, request *http.Re
 		}
 	}()
 	complated = true
-	routeData, matched := handler.app.routeTable.Match(ParseHttpMethod(request.Method), request.URL)
+	routeData, matched := handler.app.routeTable.Match(webhttp.ParseHttpMethod(request.Method), request.URL)
 	if !matched {
 		complated = false
 		return

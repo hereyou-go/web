@@ -25,8 +25,7 @@ type Context interface {
 	JSON(data interface{}, contentType ...string) View
 	Empty() View
 	View(template string, contentType ...string) View
-}
 
-// func (ctx *context) Log(format string, value ...interface{}) {
-// 	return ctx.engine.Logger().Debug("")
-// }
+	//APIResult is 推荐的Web API返回结果。
+	APIResult(status int, message string, data ...interface{}) View
+}

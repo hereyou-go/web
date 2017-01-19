@@ -44,28 +44,6 @@ func (app *Application) Use(registrations ...interface{}) {
 		} else {
 			err = fmt.Errorf("unsupport :%v", reflect.TypeOf(obj).String())
 		}
-
-		// switch any := registrations[0].(type) {
-		// case ViewEngine:
-		// 	app.viewEngine = ViewEngine(any)
-		// 	return
-		// case HTTPHandler:
-		// 	handler := HTTPHandler(any)
-		// 	handler.Init(app)
-		// 	app.handlers = append(app.handlers, handler)
-		// 	return
-		// case *RouterGroup:
-		// 	group := (*RouterGroup)(any)
-		// 	for _, r := range group.items {
-		// 		pattern := regexp.MustCompile(compilePattern(r.pattern))
-		// 		handler := buildHandler(app, r.handler)
-		// 		app.routeTable.Register(pattern, handler, 0, false)
-		// 	}
-		// 	return
-		// default:
-		// 	err = fmt.Errorf("unsupport :%v", reflect.TypeOf(any).String())
-		// 	break
-		// }
 	} else if c == 2 && registrations[0] != nil {
 		if key, ok := registrations[0].(string); ok {
 			if value, ok := registrations[1].(string); ok {
