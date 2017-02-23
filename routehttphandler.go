@@ -9,17 +9,23 @@ import (
 	webhttp "github.com/hereyou-go/web/http"
 )
 
-type RouteHandler struct {
+type RouteHttpHandler struct {
 	app    *Application
-	prefix []string
+	groups []*RouterGroup
+	// prefix []string
 }
 
-func (handler *RouteHandler) Init(app *Application) error {
+func (handler *RouteHttpHandler) Init(app *Application) error {
+	for _, group := range handler.groups {
+		if err := group.buildTo(app.routeTable, app); err != nil {
+			return err
+		}
+	}
 	handler.app = app
 	return nil
 }
 
-func (handler *RouteHandler) Handle(writer http.ResponseWriter, request *http.Request) (complated bool, err error) {
+func (handler *RouteHttpHandler) Handle(writer http.ResponseWriter, request *http.Request) (complated bool, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			var ok bool
@@ -67,8 +73,13 @@ func (handler *RouteHandler) Handle(writer http.ResponseWriter, request *http.Re
 	return
 }
 
-func URLRouting(prefix ...string) *RouteHandler {
-	return &RouteHandler{
-		prefix: prefix,
+func URLRouting(groups ...*RouterGroup) *RouteHttpHandler {
+	handler := &RouteHttpHandler{}
+	if len(groups) == 0 {
+		handler.groups = []*RouterGroup{DefaultRouterGroup}
+	} else {
+		handler.groups = groups
 	}
+
+	return handler
 }

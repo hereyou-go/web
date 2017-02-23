@@ -78,8 +78,7 @@ func (app *Application) Run(addr ...string) (err error) {
 
 	address := resolveAddress(addr)
 	logs.Info("Listening and serving HTTP on %s", address)
-	http.ListenAndServe(address, app)
-	return
+	return http.ListenAndServe(address, app)
 }
 
 // RunTLS attaches the router to a http.Server and starts listening and serving HTTPS (secure) requests.

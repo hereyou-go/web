@@ -39,7 +39,7 @@ func routerGroupMergePattern(group *RouterGroup) string {
 	return suffix
 }
 
-func (group *RouterGroup) buildTo(table *RouteTable, app *Application) {
+func (group *RouterGroup) buildTo(table *RouteTable, app *Application) error {
 	for _, g := range group.groups {
 		g.parent = group
 		g.buildTo(table, app)
@@ -53,6 +53,7 @@ func (group *RouterGroup) buildTo(table *RouteTable, app *Application) {
 		handler := buildHandler(app, r.handler, r.controller)
 		table.Register(r.method, regexp.MustCompile(pattern), keys, handler, 0, false)
 	}
+	return nil
 }
 
 func (group *RouterGroup) Route(method http.HttpMethod, pattern string, handler Handler, middlewares []string) *Router {

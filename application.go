@@ -37,8 +37,10 @@ func (app *Application) Use(registrations ...interface{}) {
 		} else if val, ok := obj.(ViewEngine); ok {
 			app.viewEngine = val
 		} else if val, ok := obj.(HTTPHandler); ok {
-			val.Init(app)
-			app.handlers = append(app.handlers, val)
+			err = val.Init(app)
+			if err != nil {
+				app.handlers = append(app.handlers, val)
+			}
 		} else if val, ok := obj.(*RouterGroup); ok {
 			val.buildTo(app.routeTable, app)
 		} else {
