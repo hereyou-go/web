@@ -29,7 +29,12 @@ type ContentView struct {
 	*ActionView
 	Content string
 }
-
+func (v *ContentView) ContentType() string {
+	if v.contentType == "" {
+		return "text/html; charset=UTF-8"
+	}
+	return v.contentType
+}
 func (ar *ContentView) Render(ctx Context) error {
 	w := ctx.Response().Writer()
 	// w.Header().Set("Content-Type", ar.ContentType())

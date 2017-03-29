@@ -51,11 +51,13 @@ func (app *Application) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 	}
 	complated := false
 	var err error
-	logs.Debug("%s %s", request.Method, request.URL)
+	
 	for _, handler := range app.handlers {
+		// logs.Debug(">>%s %s", request.Method, request.URL)
 		complated, err = handler.Handle(writer, request)
 		if err != nil {
-			logs.Error(err) //TODO:
+			logs.Debug("%s %s 500", request.Method, request.URL)
+			logs.Error(err)
 			writer.WriteHeader(500)
 			return
 		}
@@ -64,6 +66,7 @@ func (app *Application) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 		}
 	}
 	if !complated {
+		logs.Debug("%s %s 404", request.Method, request.URL)
 		writer.WriteHeader(404)
 	}
 }

@@ -1,7 +1,7 @@
 package web
 
 type Middleware interface {
-	Handle(Context, Middleware) interface{}
+	Handle(Context, Middleware) (int, View)
 }
 
 type middlewareChan struct {
@@ -11,7 +11,7 @@ type middlewareChan struct {
 	middlewares []Middleware
 }
 
-func (ch *middlewareChan) exec(ctx Context) interface{} {
+func (ch *middlewareChan) exec(ctx Context) (int, View) {
 	if ch.index >= len(ch.middlewares) {
 		return ch.handler(ctx)
 	}
@@ -21,7 +21,7 @@ func (ch *middlewareChan) exec(ctx Context) interface{} {
 	return next.Handle(ctx, ch)
 }
 
-func (ch *middlewareChan) Handle(ctx Context, next Middleware) interface{} {
+func (ch *middlewareChan) Handle(ctx Context, next Middleware) (int, View) {
 	if ch.index >= len(ch.middlewares) {
 		return ch.handler(ctx)
 	}

@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-
+	"strings"
 	"github.com/hereyou-go/web/http"
 )
 
+// Handler 定义的路由处理逻辑，它将生成一个 HandlerFunc 对象。
 type Handler interface{}
-type HandlerFunc func(Context) interface{}
+// HandlerFunc 是经过预处理的 Handler 包裹，并作为请求的结果返回或进一步处理。
+type HandlerFunc func(Context) (int, View)
+// ServiceFunc 用于获取一个参数（可能改名）
 type ServiceFunc func(Context) reflect.Value
 
 type Router struct {
@@ -91,18 +94,118 @@ func routerGetParams(handlerType reflect.Type, app *Application, instance interf
 	}
 	return params
 }
+func routerIsReturnInt(tp reflect.Type) bool{
+	switch tp.Kind() {
+		case reflect.Int:
+		fallthrough 
+		case reflect.Int16:
+		fallthrough
+		case reflect.Int32:
+		fallthrough
+		case reflect.Int64:
+		fallthrough
+		case reflect.Uint:
+		fallthrough
+		case reflect.Uint16:
+		fallthrough
+		case reflect.Uint32:
+		fallthrough
+		case reflect.Uint64:
+		return true
+	}
+	return false
+}
+
+var routerViewType = reflect.TypeOf((*View)(nil)).Elem()
+
+func routerIsReturnView(tp reflect.Type) bool{
+	return tp.Implements(routerViewType)
+}
+func routerToView(ctx Context, value interface{}) View {
+	view, ok := value.(View)
+	if ok {
+
+	} else if s, ok := value.(string); ok {
+		if strings.HasPrefix(s, "view:") {
+			view = ctx.View(s[5:])
+		} else {
+			view = ctx.Content(s)
+		}
+	} else {
+		panic(fmt.Errorf("unsupport returns value: %+v ", value))
+	}
+	return view
+}
+
+func routerToInt(result interface{}) int  {
+	switch val:= result.(type) {
+		case int:
+		return val 
+		case int16:
+		return int(val)
+		case int32:
+		return int(val)
+		case int64:
+		return int(val)
+		case uint:
+		return int(val)
+		case uint16:
+		return int(val)
+		case uint32:
+		return int(val)
+		case uint64:
+		return int(val)
+	}
+	return -1
+}
 
 func routerBuildHandle(method reflect.Value, params []ServiceFunc) HandlerFunc {
-	return func(ctx Context) interface{} {
+
+	exec := func(ctx Context) []reflect.Value{
 		arr := make([]reflect.Value, len(params))
 		for i := 0; i < len(params); i++ {
 			arr[i] = params[i](ctx)
 		}
-		returns := method.Call(arr)
-		if len(returns) > 0 {
-			return returns[0].Interface()
+		return method.Call(arr)
+	}
+
+	handlerType := method.Type()
+	numOut := handlerType.NumOut()
+	if numOut > 2 {
+		panic(fmt.Sprintf("Handler返回值数量不能大于2个:%v", numOut))
+	} else if numOut == 2 {
+		//number 
+		if !routerIsReturnInt(handlerType.Out(0)) {
+			panic(fmt.Sprintf("Handler返回值的第1个参数必须是个整数类型:%v", handlerType.Out(0)))
 		}
-		return nil
+		
+		// p2:=handlerType.Out(2)
+		// switch p2.Kind() {
+		// 	case reflect.Struct:
+		// 	case reflect.String:
+		// 	case reflect.Interface:
+		// }
+		return func(ctx Context) (int, View) {
+			returns := exec(ctx)
+			return routerToInt(returns[0].Interface()), routerToView(ctx, returns[1].Interface())
+		}
+		
+	} else if numOut == 1 {
+		if routerIsReturnInt(handlerType.Out(0)) {
+			return func(ctx Context) (int, View) {
+				returns := exec(ctx)
+				return routerToInt(returns[0].Interface()), ctx.Empty()
+			}
+		}
+		return func(ctx Context) (int, View) {
+			returns := exec(ctx)
+			return 200, routerToView(ctx, returns[0].Interface())
+		}
+	}
+
+	return func(ctx Context) (int, View) {
+		exec(ctx)
+		return 200, ctx.Empty()
 	}
 }
 

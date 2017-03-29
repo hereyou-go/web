@@ -45,15 +45,17 @@ func (rt *RouteTable) Register(method http.HttpMethod, pattern *regexp.Regexp, p
 // Match 匹配
 func (rt *RouteTable) Match(method http.HttpMethod, url *url.URL) (*RouteData, bool) {
 	//url := ""
+	// logs.Debug("%v in %v = %v", method, url.Path, "route.pattern")
 	var route *RouteEntry
 	elem := rt.routes.Front()
 	for elem != nil {
 		route, _ = elem.Value.(*RouteEntry)
 		elem = elem.Next()
+		// logs.Debug("%v in %v = %v", method, url.Path, route.pattern)
 		if route == nil || !method.In(route.method) {
 			continue
 		}
-
+		
 		if route.pattern.MatchString(url.Path) {
 			// logs.Debug("%v in %v = %v", method, route.method, method.In(route.method))
 			// if !method.In(route.method) {

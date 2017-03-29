@@ -1,11 +1,9 @@
 package web
-
 import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
-
+	"github.com/hereyou-go/logs"
 	webhttp "github.com/hereyou-go/web/http"
 )
 
@@ -50,19 +48,25 @@ func (handler *RouteHttpHandler) Handle(writer http.ResponseWriter, request *htt
 		middlewares: routeData.entry.middlewares,
 	}
 	ctx.Data("lang", handler.app.lang) //设置默认语言资源到上下文
-	result := ch.exec(ctx)
-	view, ok := result.(View)
-	if ok {
-
-	} else if s, ok := result.(string); ok {
-		if strings.HasPrefix(s, "view:") {
-			view = ctx.View(s[5:])
-		} else {
-			view = ctx.Content(s)
-		}
-	} else {
-		panic(fmt.Errorf("unsupport returns value: %+v ", result))
+	status,view := ch.exec(ctx)
+	logs.Debug("%s %s %v", request.Method, request.URL, status)
+	if status!=200{
+		writer.WriteHeader(status)
 	}
+
+	// result := ch.exec(ctx)
+	// view, ok := result.(View)
+	// if ok {
+
+	// } else if s, ok := result.(string); ok {
+	// 	if strings.HasPrefix(s, "view:") {
+	// 		view = ctx.View(s[5:])
+	// 	} else {
+	// 		view = ctx.Content(s)
+	// 	}
+	// } else {
+	// 	panic(fmt.Errorf("unsupport returns value: %+v ", result))
+	// }
 
 	contentType := view.ContentType()
 	if contentType == "" {
