@@ -35,7 +35,7 @@ func (rt *RouteTable) Register(method http.HttpMethod, pattern *regexp.Regexp, p
 		middlewares: middlewares,
 		paramNames:  paramNames,
 	}
-	logs.Debug("map url %v to %v", pattern.String(), handler)
+	logs.Debug("map url %v to %v %v", pattern.String(), handler, method)
 	//TODO:路由的优先级
 	rt.routes.PushBack(route)
 }

@@ -7,16 +7,16 @@ import (
 type HttpMethod uint8
 
 const (
-	DENY    HttpMethod = iota
-	OPTIONS HttpMethod = iota * iota
-	GET
-	HEAD
-	POST
-	PUT
-	DELETE
-	TRACE
-	CONNECT
-	ALL
+	DENY HttpMethod = 0
+	OPTIONS HttpMethod = 1
+	GET HttpMethod = 2
+	HEAD HttpMethod = 4
+	POST HttpMethod = 8
+	PUT HttpMethod = 16
+	DELETE HttpMethod = 32
+	TRACE HttpMethod = 64
+	CONNECT HttpMethod = 128
+	ALL HttpMethod = 255
 )
 
 var httpMethodMap = map[string]HttpMethod{
@@ -47,5 +47,5 @@ func (m HttpMethod) In(method HttpMethod) bool {
 		return false
 	}
 
-	return method&m == m
+	return method & m == m
 }
