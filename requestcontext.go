@@ -61,16 +61,35 @@ func (ctx *RequestContext) PathValue(name string) (value string, ok bool) {
 }
 
 func (ctx *RequestContext) Param(name string) string {
-	return "nil"
+	req := ctx.request
+	if val,ok:=req.URL.Query()[name];ok{
+		return val[0]
+	}
+	return req.FormValue(name)
+	//return ctx.request.Query(name)
+}
+
+type apiResult struct {
+	Status int `json:"status"`
+	Message string `json:"message"`
+	Data interface{} `json:"data,omitempty"`
 }
 
 func (ctx *RequestContext) APIResult(status int, message string, data ...interface{}) View {
-	result := make(map[string]interface{}, 0)
-	result["status"] = status
-	result["message"] = message
-	result["data"] = data
+	//result := make(map[string]interface{}, 0)
+	//result["status"] = status
+	//result["message"] = message
+	//result["data"] = data
+	result := &apiResult{
+		Status:status,
+		Message:message,
+	}
 	if len(data) == 1 {
-		result["data"] = data[0]
+		//result["data"] = data[0]
+		result.Data=data[0]
+	} else if len(data) != 0{
+		//result["data"] = data
+		result.Data=data
 	}
 	return ctx.JSON(result)
 }

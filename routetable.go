@@ -27,7 +27,7 @@ type RouteTable struct {
 	routes *list.List
 }
 
-func (rt *RouteTable) Register(method http.HttpMethod, pattern *regexp.Regexp, paramNames []string, handler HandlerFunc, segments int, endsWildcard bool, middlewares ...Middleware) {
+func (rt *RouteTable) Register(method http.HttpMethod, pattern *regexp.Regexp, paramNames []string, handler HandlerFunc, segments int, endsWildcard bool, middlewares []Middleware) {
 	route := &RouteEntry{
 		method:      method,
 		pattern:     pattern,
@@ -51,11 +51,11 @@ func (rt *RouteTable) Match(method http.HttpMethod, url *url.URL) (*RouteData, b
 	for elem != nil {
 		route, _ = elem.Value.(*RouteEntry)
 		elem = elem.Next()
-		// logs.Debug("%v in %v = %v", method, url.Path, route.pattern)
-		if route == nil || !method.In(route.method) {
+		logs.Debug("%s %v in %v = %v", url.Path, method, route.method, route.method.In(method))
+		if route == nil || !route.method.In(method) {
 			continue
 		}
-		
+
 		if route.pattern.MatchString(url.Path) {
 			// logs.Debug("%v in %v = %v", method, route.method, method.In(route.method))
 			// if !method.In(route.method) {
@@ -70,3 +70,30 @@ func (rt *RouteTable) Match(method http.HttpMethod, url *url.URL) (*RouteData, b
 	}
 	return nil, false
 }
+//
+//type Entry struct {
+//	path        string
+//	patternType string
+//	entries     []Entry
+//}
+//
+//type RouteTable2 struct {
+//	entries []Entry
+//}
+//
+//func (*RouteTable2) Register(path string) {
+//	bytes := []byte(path)
+//	var arr []byte
+//	for i:=0;i<len(bytes);i++ {
+//		c := bytes[i]
+//		if c == '\\'{
+//			i++
+//			arr = append(arr, bytes[i])
+//			continue
+//		} else if c == '/'{
+//
+//		}
+//		arr = append(arr, c)
+//	}
+//
+//}

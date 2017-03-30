@@ -41,14 +41,24 @@ func (handler *RouteHttpHandler) Handle(writer http.ResponseWriter, request *htt
 
 	ctx := newRequestContext(handler.app, request, writer, routeData)
 	// 中间件链
-	ch := &middlewareChan{
-		app:         handler.app,
-		handler:     routeData.entry.handler,
-		index:       0,
-		middlewares: routeData.entry.middlewares,
-	}
+	// ch := &middlewareChan{
+	// 	app:         handler.app,
+	// 	handler:     routeData.entry.handler,
+	// 	index:       0,
+	// 	middlewares: routeData.entry.middlewares,
+	// }
 	ctx.Data("lang", handler.app.lang) //设置默认语言资源到上下文
-	status,view := ch.exec(ctx)
+	var nextWare HandlerFunc
+	wareIndex := 0
+	nextWare = func(ctx Context) (int, View) {
+		if wareIndex >= len(routeData.entry.middlewares) {
+			return routeData.entry.handler(ctx)
+		}
+		next := routeData.entry.middlewares[wareIndex]
+		wareIndex++
+		return next(ctx, nextWare)
+	}
+	status,view := nextWare(ctx)
 	logs.Debug("%s %s %v", request.Method, request.URL, status)
 	if status!=200{
 		writer.WriteHeader(status)

@@ -41,5 +41,11 @@ func ParseHttpMethod(method string) HttpMethod {
 }
 
 func (m HttpMethod) In(method HttpMethod) bool {
+	if m == ALL {
+		return true
+	} else if m == DENY {
+		return false
+	}
+
 	return method&m == m
 }

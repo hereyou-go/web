@@ -69,11 +69,15 @@ func (app *Application) Use(registrations ...interface{}) {
 	panic(err)
 }
 
-func (app *Application) Items() utils.Attribute {
+func (app *Application) Attrs() utils.Attribute {
 	return app.attrs
 }
 
-func (app *Application) Attr(key string, defaultValue ...string) string {
+func (app *Application) Attr(key string) interface{} {
+	return app.attrs.Get(key)
+}
+
+func (app *Application) AttrString(key string, defaultValue ...string) string {
 	if val := app.attrs.GetString(key); val != "" {
 		return val
 	}

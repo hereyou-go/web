@@ -115,12 +115,12 @@ func routerIsReturnInt(tp reflect.Type) bool{
 	}
 	return false
 }
-
-var routerViewType = reflect.TypeOf((*View)(nil)).Elem()
-
-func routerIsReturnView(tp reflect.Type) bool{
-	return tp.Implements(routerViewType)
-}
+//
+//var routerViewType = reflect.TypeOf((*View)(nil)).Elem()
+//
+//func routerIsReturnView(tp reflect.Type) bool{
+//	return tp.Implements(routerViewType)
+//}
 func routerToView(ctx Context, value interface{}) View {
 	view, ok := value.(View)
 	if ok {

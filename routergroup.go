@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hereyou-go/web/http"
+	"github.com/hereyou-go/logs"
 )
 
 type RouterGroup struct {
@@ -27,16 +28,37 @@ func NewGroup(pattern string, middlewares ...string) *RouterGroup {
 	return group
 }
 
-func routerGroupMergePattern(group *RouterGroup) string {
+func routerGroupMergeMiddlewares(dst []Middleware, app *Application, middlewares []string) ([]Middleware, error) {
+	for _, name := range middlewares {
+		if ware,ok:=app.Attr(name).(Middleware);ok{
+			dst = append(dst, ware)
+		}else {
+			return dst, logs.NewError("","指定 Middleware 未定义，使用 app.use 进行注册。name:%v => %v", name,app.Attr(name))
+		}
+	}
+	return  dst,nil
+}
+
+func routerGroupMergePattern(group *RouterGroup, app *Application) (string,[]Middleware, error) {
 	suffix := strings.Trim(group.pattern, " ")
 	if group.parent != nil {
-		prefix := routerGroupMergePattern(group.parent)
+		prefix,wares,err := routerGroupMergePattern(group.parent, app)
+		if err!=nil{
+			return "",nil,err
+		}
+
 		if prefix == "/" {
 			prefix = "" //如果上级是默认规则，则去掉
 		}
-		return prefix + suffix
+		wares,err=routerGroupMergeMiddlewares(wares,app,group.middlewares)
+		if err!=nil{
+			return "",nil,err
+		}
+		return prefix + suffix, wares, nil
 	}
-	return suffix
+	wares:=make([]Middleware,0)
+	wares,err:=routerGroupMergeMiddlewares(wares,app,group.middlewares)
+	return suffix,wares,err
 }
 
 func (group *RouterGroup) buildTo(table *RouteTable, app *Application) error {
@@ -44,14 +66,23 @@ func (group *RouterGroup) buildTo(table *RouteTable, app *Application) error {
 		g.parent = group
 		g.buildTo(table, app)
 	}
-	groupPattern := routerGroupMergePattern(group)
+	groupPattern,wares,err := routerGroupMergePattern(group,app)
+	if err!=nil{
+		return err
+	}
 	if groupPattern == "/" {
 		groupPattern = "" //去掉默认规则
 	}
 	for _, r := range group.routers {
 		pattern, keys := compilePattern(groupPattern + strings.Trim(r.pattern, " "))
 		handler := buildHandler(app, r.handler, r.controller)
-		table.Register(r.method, regexp.MustCompile(pattern), keys, handler, 0, false)
+		rwares:=make([]Middleware,len(wares))
+		copy(rwares,wares)
+		rwares,err:=routerGroupMergeMiddlewares(rwares,app,r.middlewares)
+		if err!=nil{
+			return err
+		}
+		table.Register(r.method, regexp.MustCompile(pattern), keys, handler, 0, false,rwares)
 	}
 	return nil
 }
@@ -103,7 +134,8 @@ func routerGroupResolveRoute(group *RouterGroup, controller interface{}) {
 					isset = true
 				}
 			}
-			group.Route(httpMethod, pattern, method, nil).controller = controller
+			var wares []string
+			group.Route(httpMethod, pattern, method,wares).controller = controller
 		}
 	}
 }
@@ -120,8 +152,8 @@ func (group *RouterGroup) Get(pattern string, handler Handler, middlewares ...st
 }
 
 func (group *RouterGroup) Group(pattern string, controller interface{}, middlewares ...string) *RouterGroup {
-	sub := NewGroup(pattern).AppendController(controller)
-	sub.middlewares = middlewares
+	sub := NewGroup(pattern, middlewares...).AppendController(controller)
+	//sub.middlewares = middlewares
 	group.groups = append(group.groups, sub)
 	return sub
 }

@@ -12,6 +12,6 @@ func Get(pattern string, handler Handler, middlewares ...string) *Router {
 	return DefaultRouterGroup.Get(pattern, handler, middlewares...)
 }
 
-func Group(pattern string, controller interface{}) *RouterGroup {
-	return DefaultRouterGroup.Group(pattern, controller)
+func Group(pattern string, controller interface{}, middlewares ...string) *RouterGroup {
+	return DefaultRouterGroup.Group(pattern, controller, middlewares...)
 }
