@@ -61,7 +61,7 @@ func (ctx *RequestContext) PathValue(name string) (value string, ok bool) {
 }
 
 func (ctx *RequestContext) Param(name string) string {
-	req := ctx.request
+	req := ctx.request.Request
 	if val,ok:=req.URL.Query()[name];ok{
 		return val[0]
 	}
